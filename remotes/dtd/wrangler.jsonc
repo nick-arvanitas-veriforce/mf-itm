@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "cloudflare-react-remote-a",
+	"name": "mf-itm-dtd",
 	"compatibility_date": "2026-06-16",
 	"assets": {
 		"directory": "./dist",

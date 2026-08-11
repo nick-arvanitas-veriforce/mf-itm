@@ -8,14 +8,14 @@ export default function Widget({ greeting = 'Hello' }: { greeting?: string }) {
   const [count, setCount] = useState(0)
 
   return (
-    <div className="remote-widget remote-widget-b">
-      <h2>Remote B MFE Widget</h2>
+    <div className="remote-widget">
+      <h2>Employee Management</h2>
       <p>
-        {greeting} 👋 — this card is rendered by the <strong>remoteB</strong> micro-frontend.
+        {greeting} 👋 — this card is rendered by the <strong>em</strong> micro-frontend.
       </p>
-      <button onClick={() => setCount((c) => c + 1)}>Remote B count: {count}</button>
+      <button onClick={() => setCount((c) => c + 1)}>EM count: {count}</button>
       <p style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, color: '#888' }}>
-        remote-b widget version: {import.meta.env.VITE_APP_VERSION ?? 'dev'}
+        em widget version: {import.meta.env.VITE_APP_VERSION ?? 'dev'}
       </p>
     </div>
   )

@@ -23,8 +23,8 @@ export default {
     // Proxy each remote MFE's assets same-origin so the browser loads the
     // remote entry + its chunks without CORS:  /<prefix>/<path> -> remote Worker /<path>.
     const remoteRoutes: Array<{ prefix: string; service: Fetcher }> = [
-      { prefix: "/remote-a", service: env.REMOTE_A },
-      { prefix: "/remote-b", service: env.REMOTE_B },
+      { prefix: "/em", service: env.EM },
+      { prefix: "/dtd", service: env.DTD },
     ];
     for (const { prefix, service } of remoteRoutes) {
       if (url.pathname === prefix || url.pathname.startsWith(prefix + "/")) {

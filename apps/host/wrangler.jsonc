@@ -1,14 +1,14 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "cloudflare-react",
+	"name": "mf-itm-host",
 	"main": "worker/index.ts",
 	"compatibility_date": "2026-06-16",
 	"assets": {
 		"binding": "ASSETS",
 		"not_found_handling": "single-page-application",
 		"run_worker_first": [
-			"/remote-a/*",
-			"/remote-b/*",
+			"/em/*",
+			"/dtd/*",
 			"/api/*"
 		]
 	},
@@ -23,12 +23,12 @@
 	"preview_urls": true,
 	"services": [
 		{
-			"binding": "REMOTE_A",
-			"service": "cloudflare-react-remote-a"
+			"binding": "EM",
+			"service": "mf-itm-em"
 		},
 		{
-			"binding": "REMOTE_B",
-			"service": "cloudflare-react-remote-b"
+			"binding": "DTD",
+			"service": "mf-itm-dtd"
 		}
 	],
 	// Host uses @cloudflare/vite-plugin, which selects the env at BUILD time via
@@ -39,24 +39,24 @@
 			// without it the Worker is served on *.workers.dev.
 			"services": [
 				{
-					"binding": "REMOTE_A",
-					"service": "cloudflare-react-remote-a-qa"
+					"binding": "EM",
+					"service": "mf-itm-em-qa"
 				},
 				{
-					"binding": "REMOTE_B",
-					"service": "cloudflare-react-remote-b-qa"
+					"binding": "DTD",
+					"service": "mf-itm-dtd-qa"
 				}
 			]
 		},
 		"prod": {
 			"services": [
 				{
-					"binding": "REMOTE_A",
-					"service": "cloudflare-react-remote-a-prod"
+					"binding": "EM",
+					"service": "mf-itm-em-prod"
 				},
 				{
-					"binding": "REMOTE_B",
-					"service": "cloudflare-react-remote-b-prod"
+					"binding": "DTD",
+					"service": "mf-itm-dtd-prod"
 				}
 			]
 		}

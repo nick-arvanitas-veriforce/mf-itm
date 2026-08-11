@@ -29,11 +29,11 @@ function App() {
       </header>
 
       <section className="remote-slot">
-        <RemoteWidget remoteId="remoteA/Widget" greeting="Hello from the host" />
+        <RemoteWidget remoteId="em/Widget" greeting="Hello from the host" />
       </section>
 
       <section className="remote-slot">
-        <RemoteWidget remoteId="remoteB/Widget" greeting="Hello from the host" />
+        <RemoteWidget remoteId="dtd/Widget" greeting="Hello from the host" />
       </section>
     </main>
   )

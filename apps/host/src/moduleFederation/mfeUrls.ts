@@ -16,11 +16,14 @@ const devRemoteEntry = (envOverride: string | undefined, fallback: string) => {
 // they reference (the VITE_*_URL lookups + localhost fallbacks) — are dropped
 // from the deployed bundle. Production always resolves to the same-origin
 // /<remote>/remoteEntry.js paths.
+//
+// Keys are the federation container names declared in each remote's
+// vite.config.ts (`federation({ name })`), so they must stay in sync.
 export const mfeUrls: Record<string, string> = {
-  remoteA: import.meta.env.DEV
-    ? devRemoteEntry(import.meta.env.VITE_REMOTE_A_URL, 'http://localhost:5174')
-    : '/remote-a/remoteEntry.js',
-  remoteB: import.meta.env.DEV
-    ? devRemoteEntry(import.meta.env.VITE_REMOTE_B_URL, 'http://localhost:5175')
-    : '/remote-b/remoteEntry.js',
+  em: import.meta.env.DEV
+    ? devRemoteEntry(import.meta.env.VITE_EM_URL, 'http://localhost:5174')
+    : '/em/remoteEntry.js',
+  dtd: import.meta.env.DEV
+    ? devRemoteEntry(import.meta.env.VITE_DTD_URL, 'http://localhost:5175')
+    : '/dtd/remoteEntry.js',
 }

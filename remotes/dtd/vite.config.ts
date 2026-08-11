@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     federation({
       dts: false,
-      name: 'remoteA',
+      name: 'dtd',
       // Emitted as dist/remoteEntry.js — the container entry the host loads.
       filename: 'remoteEntry.js',
       exposes: {
@@ -28,12 +28,12 @@ export default defineConfig({
   // preview the same applies — allow CORS in both. When deployed, the host
   // Worker proxies the remote same-origin so CORS is not needed there.
   server: {
-    port: 5174,
+    port: 5175,
     strictPort: true,
     cors: { origin: '*' },
   },
   preview: {
-    port: 5174,
+    port: 5175,
     strictPort: true,
     cors: { origin: '*' },
   },

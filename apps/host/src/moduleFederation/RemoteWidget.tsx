@@ -44,10 +44,15 @@ class RemoteErrorBoundary extends Component<{ children: ReactNode }, { error: Er
 }
 
 export function RemoteWidget({ remoteId, greeting }: { remoteId: string; greeting?: string }) {
+  // Not actually created during render: getRemoteWidget memoizes on remoteId via
+  // the module-level map above, so identity is stable across renders. That
+  // stability is required — a fresh lazy() each render would re-fetch the remote
+  // container and remount the widget.
   const Widget = getRemoteWidget(remoteId)
   return (
     <RemoteErrorBoundary>
       <Suspense fallback={<div className="remote-loading">Loading remote MFE…</div>}>
+        {/* eslint-disable-next-line react-hooks/static-components -- see above */}
         <Widget greeting={greeting} />
       </Suspense>
     </RemoteErrorBoundary>

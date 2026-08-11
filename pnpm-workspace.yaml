@@ -1,0 +1,35 @@
+packages:
+  - apps/*
+  - remotes/*
+
+# esbuild (Vite) and workerd (Wrangler) need their postinstall scripts to place
+# platform-native binaries. pnpm blocks build scripts by default.
+onlyBuiltDependencies:
+  - esbuild
+  - workerd
+
+# Single source of truth for dependency versions across every workspace.
+# Workspaces reference these as `"vite": "catalog:"` — so a version is declared
+# exactly once here, but each package.json still lists the deps it actually
+# imports. That keeps each remote independently installable if it's ever split
+# into its own repo (swap `catalog:` for the literal version and it stands alone).
+catalog:
+  '@cloudflare/vite-plugin': ^1.40.2
+  '@eslint/js': ^10.0.1
+  '@module-federation/runtime': ^2.5.1
+  '@module-federation/vite': ^1.16.8
+  '@types/node': ^24.13.2
+  '@types/react': ^19.2.14
+  '@types/react-dom': ^19.2.3
+  '@vitejs/plugin-react': ^6.0.1
+  concurrently: ^9.1.0
+  eslint: ^10.3.0
+  eslint-plugin-react-hooks: ^7.1.1
+  eslint-plugin-react-refresh: ^0.5.2
+  globals: ^17.6.0
+  react: ^19.2.6
+  react-dom: ^19.2.6
+  typescript: ~6.0.2
+  typescript-eslint: ^8.59.2
+  vite: ^8.0.12
+  wrangler: ^4.100.0

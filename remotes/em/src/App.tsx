@@ -5,12 +5,12 @@ import Widget from './Widget'
 export default function App() {
   return (
     <main style={{ maxWidth: 640, margin: '0 auto', padding: '2rem', fontFamily: 'system-ui' }}>
-      <h1>Remote A MFE (standalone)</h1>
+      <h1>Employee Management (standalone)</h1>
       <p style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, color: '#888' }}>
-        remote-a app version: {import.meta.env.VITE_APP_VERSION ?? 'dev'}
+        em app version: {import.meta.env.VITE_APP_VERSION ?? 'dev'}
       </p>
-      <p>Running remote A on its own dev server. The host loads the widget below remotely.</p>
-      <Widget greeting="Hello from the standalone remote A" />
+      <p>Running Employee Management on its own dev server. The host loads the widget below remotely.</p>
+      <Widget greeting="Hello from the standalone EM" />
     </main>
   )
 }
