@@ -14,9 +14,13 @@ export default defineConfig({
       exposes: {
         './Widget': './src/Widget.tsx',
       },
+      // Must match the host's shared config — see apps/host/vite.config.ts.
       shared: {
         react: { singleton: true },
         'react-dom': { singleton: true },
+        '@mui/material': { singleton: true },
+        '@emotion/react': { singleton: true },
+        '@emotion/styled': { singleton: true },
       },
     }),
   ],

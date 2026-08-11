@@ -1,0 +1,37 @@
+{
+  "name": "@cf-mfe/ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "//exports": "Source-only, no build step. Every consumer is a Vite app, so Vite compiles these .tsx files as part of the app that imports them — which also means HMR works across the package boundary and there's no build ordering to get wrong. Swap to a dist/ build only if a non-Vite consumer appears.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/components/*.tsx"
+  },
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "//peerDependencies": "Peers, not dependencies: MUI, Emotion and React must resolve to the ONE copy the host federates as a singleton. A direct dependency here risks pnpm giving this package its own nested copy, which would break the shared-singleton contract and leave these components reading a different ThemeProvider than the app around them.",
+  "peerDependencies": {
+    "dayjs": "*",
+    "@mui/x-date-pickers": "*",
+    "@alcumus/design-tokens": "*",
+    "@fortawesome/fontawesome-svg-core": "*",
+    "@fortawesome/free-solid-svg-icons": "*",
+    "@fortawesome/react-fontawesome": "*",
+    "@mui/material": "*",
+    "react": "*"
+  },
+  "devDependencies": {
+    "dayjs": "catalog:",
+    "@mui/x-date-pickers": "catalog:",
+    "@alcumus/design-tokens": "catalog:",
+    "@fortawesome/fontawesome-svg-core": "catalog:",
+    "@fortawesome/free-solid-svg-icons": "catalog:",
+    "@fortawesome/react-fontawesome": "catalog:",
+    "@mui/material": "catalog:",
+    "@types/react": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:"
+  }
+}

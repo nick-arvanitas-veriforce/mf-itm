@@ -21,6 +21,17 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  // The shared component library. react-refresh/only-export-components targets
+  // app code, where mixing components and helpers in one file breaks HMR. A
+  // component library legitimately ships hooks, formatters, and grouping objects
+  // beside its components (useSidebar, formatDate, the TableCells catalog), and
+  // it is never itself the HMR boundary — the consuming app is.
+  {
+    files: ['packages/ui/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
   // The host's Worker runs on workerd, not in the browser.
   {
     files: ['apps/host/worker/**/*.ts'],

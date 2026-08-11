@@ -6,9 +6,15 @@ import {
   type LazyExoticComponent,
   type ReactNode,
 } from 'react'
+import Alert from '@mui/material/Alert'
+import AlertTitle from '@mui/material/AlertTitle'
+import Box from '@mui/material/Box'
+import Skeleton from '@mui/material/Skeleton'
 import { loadRemoteComponent } from './moduleFederationRuntime'
 
-type WidgetProps = { greeting?: string }
+// Remotes render full pages into the shell's content area, so the federation
+// contract carries no props — each remote owns its own page state.
+type WidgetProps = Record<string, never>
 
 // Memoize the lazy component per remoteId so each `remote/Widget` is created
 // (and loaded over Module Federation) exactly once.
@@ -33,17 +39,27 @@ class RemoteErrorBoundary extends Component<{ children: ReactNode }, { error: Er
   render() {
     if (this.state.error) {
       return (
-        <div className="remote-error">
-          <strong>Failed to load remote MFE.</strong>
-          <pre>{this.state.error.message}</pre>
-        </div>
+        <Alert severity="error" variant="outlined">
+          <AlertTitle>Failed to load remote MFE</AlertTitle>
+          <Box component="pre" sx={{ m: 0, whiteSpace: 'pre-wrap', fontSize: 12 }}>
+            {this.state.error.message}
+          </Box>
+        </Alert>
       )
     }
     return this.props.children
   }
 }
 
-export function RemoteWidget({ remoteId, greeting }: { remoteId: string; greeting?: string }) {
+const RemoteFallback = () => (
+  <Box sx={{ p: 1 }}>
+    <Skeleton variant="text" width="40%" height={32} />
+    <Skeleton variant="text" width="80%" />
+    <Skeleton variant="rounded" width={140} height={36} sx={{ mt: 1 }} />
+  </Box>
+)
+
+export function RemoteWidget({ remoteId }: { remoteId: string }) {
   // Not actually created during render: getRemoteWidget memoizes on remoteId via
   // the module-level map above, so identity is stable across renders. That
   // stability is required — a fresh lazy() each render would re-fetch the remote
@@ -51,9 +67,9 @@ export function RemoteWidget({ remoteId, greeting }: { remoteId: string; greetin
   const Widget = getRemoteWidget(remoteId)
   return (
     <RemoteErrorBoundary>
-      <Suspense fallback={<div className="remote-loading">Loading remote MFE…</div>}>
+      <Suspense fallback={<RemoteFallback />}>
         {/* eslint-disable-next-line react-hooks/static-components -- see above */}
-        <Widget greeting={greeting} />
+        <Widget />
       </Suspense>
     </RemoteErrorBoundary>
   )

@@ -11,12 +11,13 @@ export default defineConfig({
     federation({
       dts: false,
       name: 'host',
-      // Remotes are registered at RUNTIME (see src/moduleFederation/*),
-      // so the entry URL can differ between dev and deployed environments.
       remotes: {},
       shared: {
         react: { singleton: true },
         'react-dom': { singleton: true },
+        '@mui/material': { singleton: true },
+        '@emotion/react': { singleton: true },
+        '@emotion/styled': { singleton: true },
       },
       shareStrategy: 'loaded-first',
     }),

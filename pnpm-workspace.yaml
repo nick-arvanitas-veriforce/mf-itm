@@ -1,5 +1,6 @@
 packages:
   - apps/*
+  - packages/*
   - remotes/*
 
 # esbuild (Vite) and workerd (Wrangler) need their postinstall scripts to place
@@ -14,22 +15,32 @@ onlyBuiltDependencies:
 # imports. That keeps each remote independently installable if it's ever split
 # into its own repo (swap `catalog:` for the literal version and it stands alone).
 catalog:
-  '@cloudflare/vite-plugin': ^1.40.2
-  '@eslint/js': ^10.0.1
-  '@module-federation/runtime': ^2.5.1
-  '@module-federation/vite': ^1.16.8
-  '@types/node': ^24.13.2
-  '@types/react': ^19.2.14
-  '@types/react-dom': ^19.2.3
-  '@vitejs/plugin-react': ^6.0.1
+  "@alcumus/design-tokens": ^3.0.45
+  "@cloudflare/vite-plugin": ^1.40.2
+  "@emotion/react": ^11.14.0
+  "@emotion/styled": ^11.14.1
+  "@eslint/js": ^10.0.1
+  "@fortawesome/fontawesome-svg-core": ^7.3.0
+  "@fortawesome/free-regular-svg-icons": ^7.3.0
+  "@fortawesome/free-solid-svg-icons": ^7.3.0
+  "@fortawesome/react-fontawesome": ^3.4.0
+  "@module-federation/runtime": ^2.5.1
+  "@module-federation/vite": ^1.16.8
+  "@mui/x-date-pickers": ^7.8.0
+  dayjs: ^1.11.21
+  "@mui/material": ^7.3.1
+  "@types/node": ^24.13.2
+  "@types/react": ^19.2.14
+  "@types/react-dom": ^19.2.3
+  "@vitejs/plugin-react": ^6.0.1
   concurrently: ^9.1.0
-  eslint: ^10.3.0
   eslint-plugin-react-hooks: ^7.1.1
   eslint-plugin-react-refresh: ^0.5.2
+  eslint: ^10.3.0
   globals: ^17.6.0
-  react: ^19.2.6
   react-dom: ^19.2.6
-  typescript: ~6.0.2
+  react: ^19.2.6
   typescript-eslint: ^8.59.2
+  typescript: ~6.0.2
   vite: ^8.0.12
   wrangler: ^4.100.0

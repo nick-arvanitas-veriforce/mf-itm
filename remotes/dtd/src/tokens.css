@@ -1,0 +1,19 @@
+/* Veriforce design tokens, imported by the FEDERATION entry (Widget.tsx) so they
+   load on both paths — standalone dev AND when the host loads this remote.
+
+   This is load-bearing, and the reason it can't just live in the host: the MUI
+   theme the host provides is entirely var-based (its palette values are literal
+   `var(--ds-color-blue-700)` strings, ~570 of them). A shared @mui/material
+   singleton carries the theme OBJECT across the federation boundary, but it
+   cannot carry CSS custom properties — those only exist if this stylesheet is in
+   the document. Some tokens (--ds-sidebar-*, --ds-surface-*) aren't in the theme
+   at all and are read directly from `sx`.
+
+   Importing it here rather than in index.css matters: index.css is pulled in by
+   bootstrap.tsx, which is the STANDALONE entry only. The host loads Widget.tsx
+   directly and never evaluates bootstrap, so a remote that relied on index.css
+   would render with every color unresolved under the host.
+
+   Duplicate @import across host and remotes is harmless — the browser dedupes
+   identical stylesheet URLs, and the custom properties are idempotent. */
+@import '@alcumus/design-tokens/css';

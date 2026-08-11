@@ -13,7 +13,16 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
+    "@cf-mfe/ui": "workspace:*",
+    "@alcumus/design-tokens": "catalog:",
+    "@fortawesome/react-fontawesome": "catalog:",
+    "@fortawesome/free-solid-svg-icons": "catalog:",
+    "@fortawesome/free-regular-svg-icons": "catalog:",
+    "@fortawesome/fontawesome-svg-core": "catalog:",
+    "@emotion/react": "catalog:",
+    "@emotion/styled": "catalog:",
     "@module-federation/runtime": "catalog:",
+    "@mui/material": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

@@ -1,11 +1,9 @@
-# Vite Module Federation on Cloudflare Workers
+# mf-itm — Module Federation on Cloudflare Workers
 
-<img width="797" height="675" alt="image" src="./docs/app-preview.png" />
+A **micro-frontend monorepo** using **Module Federation** (`@module-federation/vite`)
+on **Cloudflare Workers**, with **MUI** as the shared component library.
 
-A minimal, production-shaped example of a **micro-frontend monorepo** using
-**Module Federation** (`@module-federation/vite`) on **Cloudflare Workers**.
-
-An npm-workspace monorepo with one **host** app and two **remote** micro-frontends
+A pnpm-workspace monorepo with one **host** app and two **remote** micro-frontends
 (MFEs), each deployed as its own Cloudflare Worker. The host loads the remotes at
 runtime and proxies their assets same-origin, so there's no CORS in production and a
 single host build works across every environment.
@@ -13,66 +11,88 @@ single host build works across every environment.
 ## Layout
 
 ```
-apps/host/         Host shell. Cloudflare Worker (cloudflare-react) serving the SPA.
-                   Consumes the remotes at runtime and proxies /remote-a/* and
-                   /remote-b/* to them.
-mfes/remote-a/     Remote MFE. Static-assets-only Worker exposing ./Widget.
-mfes/remote-b/     Remote MFE. Static-assets-only Worker exposing ./Widget.
+apps/host/      Host shell. Cloudflare Worker serving the SPA. Owns the MUI theme
+                and the nav bar. Consumes the remotes at runtime and proxies
+                /em/* and /dtd/* to them.
+remotes/em/     Employee Management. Static-assets-only Worker exposing ./Widget.
+remotes/dtd/    Digital Training Delivery. Static-assets-only Worker exposing ./Widget.
 ```
+
+## Shared dependencies
+
+Two mechanisms, for two different problems:
+
+**Versions** — the `catalog:` block in [`pnpm-workspace.yaml`](pnpm-workspace.yaml) is
+the single source of truth. Each `package.json` still lists the deps it actually
+imports, but the version is declared exactly once.
+
+**Runtime singletons** — `react`, `react-dom`, `@mui/material`, `@emotion/react`, and
+`@emotion/styled` are declared `singleton: true` in **every** `vite.config.ts`. This
+is not optional for MUI: two copies of emotion means two style caches (duplicate
+`<style>` injection, class-name collisions) and two React contexts for the theme, so
+a remote would silently render with the default theme instead of the host's.
+
+**Adding a shared dep:** add it to the catalog, add `"pkg": "catalog:"` to each
+package.json that imports it, and — if it holds React context or global state — add
+it to the `shared` block of all three vite configs.
+
+## Theming
+
+The host creates the one theme ([`apps/host/src/theme.ts`](apps/host/src/theme.ts))
+and provides it in `bootstrap.tsx`. Remotes declare **no** `ThemeProvider` of their
+own — they inherit it through the shared singletons above.
+
+Each remote's own `bootstrap.tsx` is the **standalone** entry only (used when you run
+that remote's dev server directly). It deliberately does *not* install the host theme,
+so a widget can't come to depend on custom theme keys the host might not have.
+
+Navigation lives in the host ([`components/NavBar.tsx`](apps/host/src/components/NavBar.tsx)),
+not in its own remote — nav has to know every route, which makes it the most coupled
+part of the app and a poor fit for an independently-deployable remote.
 
 ## How the remote URLs resolve (dev + deployed)
 
-The host registers remotes **at runtime** (`apps/host/src/moduleFederation/`), so a
-single build loads each remote from the right place per environment:
+The host registers remotes **at runtime**
+([`apps/host/src/moduleFederation/`](apps/host/src/moduleFederation/)), so a single
+build loads each remote from the right place per environment:
 
 | Environment | Remote entry URL | How it's served |
 |-------------|------------------|-----------------|
-| **dev** | `http://localhost:5174/remoteEntry.js` (remote-a), `:5175` (remote-b) | each remote's Vite dev server, cross-origin (CORS `*`) |
-| **deployed** | `/remote-a/remoteEntry.js`, `/remote-b/remoteEntry.js` | **same-origin**; the host Worker proxies `/remote-a/*` and `/remote-b/*` to the remote Workers (service bindings `REMOTE_A` / `REMOTE_B`) — no CORS |
+| **dev** | `http://localhost:5174/remoteEntry.js` (em), `:5175` (dtd) | each remote's Vite dev server, cross-origin (CORS `*`) |
+| **deployed** | `/em/remoteEntry.js`, `/dtd/remoteEntry.js` | **same-origin**; the host Worker proxies `/em/*` and `/dtd/*` to the remote Workers (service bindings `EM` / `DTD`) — no CORS |
 
-Override a dev origin with `VITE_REMOTE_A_URL` / `VITE_REMOTE_B_URL` (e.g. point dev
-at an already-deployed remote).
+Override a dev origin with `VITE_EM_URL` / `VITE_DTD_URL` (e.g. point dev at an
+already-deployed remote).
 
 ## Develop
 
 ```bash
-npm install
-npm run dev          # runs remote-a (5174) + remote-b (5175) + host (5173) together
+pnpm install
+pnpm dev          # runs em (5174) + dtd (5175) + host (5173) together
 ```
 
-Open http://localhost:5173 — the page shows the host shell with each remote's
-`Widget` mounted inside it.
-
-## Build
+Open http://localhost:5173 — the host shell with each remote's `Widget` mounted inside it.
 
 ```bash
-npm run build        # builds all workspaces
+pnpm typecheck
+pnpm lint
+pnpm build
 ```
 
 ## Deploy
 
-Deploy per environment — `qa` or `prod`. `VITE_APP_VERSION` is required:
-it tags the deployed version (used for rollback) and is baked into the build.
+Deploy per environment — `qa` or `prod`. `VITE_APP_VERSION` is required: it tags the
+deployed version (used for rollback) and is baked into the build.
 
 ```bash
-VITE_APP_VERSION=v1.0.1 npm run deploy:qa        # or deploy:prod
+VITE_APP_VERSION=v1.0.1 pnpm deploy:qa        # or deploy:prod
 ```
 
-Each `deploy:<env>` deploys the remotes first, then the host (the host's service
-bindings target that env's remotes).
+Each `deploy:<env>` deploys the **remotes first, then the host** — the host's service
+bindings must point at remotes that already exist in that env.
 
 > **Before you deploy:** set your own Worker names and custom domains in the
-> `wrangler.jsonc` files. The host's `apps/host/wrangler.jsonc` uses placeholder
-> domains like `app-qa.your.domain.io` — replace them with your own (or remove the
-> `routes` blocks to deploy on `*.workers.dev` instead).
-
-
-## The workers results in cloudflare
-```bash
-VITE_APP_VERSION=1.0.0 npm run deploy:qa
-```
-
-<img width="1299" height="629" alt="Screenshot 2026-06-17 at 16 13 47" src="./docs/cloudflare-workers-preview.png" />
+> `wrangler.jsonc` files. Without a `routes` block the Workers serve on `*.workers.dev`.
 
 ### Rollback
 
@@ -80,49 +100,41 @@ Each deploy creates an immutable version tagged with `VITE_APP_VERSION`. Rollbac
 per-Worker — target it with `--name`.
 
 ```bash
-# Roll back to the PREVIOUS version, recording a reason with -m / --message:
-npx wrangler rollback --name cloudflare-react-qa -m "revert: bad qa release"
+# Roll back to the PREVIOUS version, recording a reason:
+pnpm exec wrangler rollback --name mf-itm-host-qa -m "revert: bad qa release"
 ```
 
 `wrangler rollback` takes a **version id**, not a tag — so to roll back to a specific
 tagged version, look up its id first (the `Tag` column is the `VITE_APP_VERSION`):
 
 ```bash
-# 1. find the version id for the tag you want (e.g. v1.0.1)
-npx wrangler versions list --name cloudflare-react-qa
-
-# 2. roll back to that id
-npx wrangler rollback 1a2b3c4d-5e6f-7890-abcd-ef1234567890 \
-  --name cloudflare-react-qa -m "pin qa back to v1.0.1"
+pnpm exec wrangler versions list --name mf-itm-host-qa
+pnpm exec wrangler rollback <version-id> --name mf-itm-host-qa -m "pin qa back to v1.0.1"
 ```
 
-Remotes roll back the same way — `--name cloudflare-react-remote-a-qa` (or
-`-remote-b-qa`). Swap the `-qa` suffix for `-prod` for the other env.
+Remotes roll back the same way — `--name mf-itm-em-qa` / `mf-itm-dtd-qa`.
 
 ## Preview URLs
 
 `preview_urls` is enabled on every Worker, so you can upload a build as a new
 **version** and get a URL for it **without touching production traffic**. Use
-`--preview-alias` for a stable, readable URL (re-uploading with the same alias moves
-it to the newest version, so the URL stays constant across pushes).
+`--preview-alias` for a stable, readable URL.
 
 Host — the env is baked in at build time via `CLOUDFLARE_ENV`, so build against the
-env whose remotes you want bound (e.g. `qa`), then upload:
+env whose remotes you want bound, then upload:
 
 ```bash
 cd apps/host
-CLOUDFLARE_ENV=qa npm run build
-npx wrangler versions upload --preview-alias pr-123
-# → Version Preview Alias URL: https://pr-123-cloudflare-react-qa.<subdomain>.workers.dev
+CLOUDFLARE_ENV=qa pnpm build
+pnpm exec wrangler versions upload --preview-alias pr-123
 ```
 
 Remotes — env via `--env`:
 
 ```bash
-cd mfes/remote-a
-npm run build
-npx wrangler versions upload --env qa --preview-alias pr-123
-# → https://pr-123-cloudflare-react-remote-a-qa.<subdomain>.workers.dev
+cd remotes/em
+pnpm build
+pnpm exec wrangler versions upload --env qa --preview-alias pr-123
 ```
 
 - Promote a previewed version to live traffic with `wrangler versions deploy`.
@@ -134,12 +146,13 @@ npx wrangler versions upload --env qa --preview-alias pr-123
 
 - The **remote** Workers use `not_found_handling: "none"` — MFE asset origins must
   404 on missing chunks, never SPA-fallback to `index.html`.
-- The **host** Worker uses `run_worker_first` for `/remote-a/*`, `/remote-b/*`, and
-  `/api/*` so it can proxy/handle those; everything else is served straight from
-  static assets.
+- The **host** Worker uses `run_worker_first` for `/em/*`, `/dtd/*`, and `/api/*` so it
+  can proxy/handle those; everything else is served straight from static assets.
 - The host Worker sets cache headers itself (`worker/index.ts`) because `_headers`
   files don't apply to responses a Worker returns via `env.ASSETS.fetch`. The remotes
   are assets-only Workers, so their own `public/_headers` apply.
-- Shared singletons (`react`, `react-dom`) are declared in every `vite.config.ts` so
-  there's one React instance across the federation boundary.
-- `dts: false` on the federation plugin disables remote type generation (reduce overhead for the example).
+- The host uses `@cloudflare/vite-plugin`, which selects the wrangler env at **build**
+  time via `CLOUDFLARE_ENV` — so `wrangler deploy --env` does *not* work for the host.
+  The remotes are plain wrangler and do use `--env`.
+- `dts: false` on the federation plugin disables remote type generation. Widget props
+  are currently structurally typed on the host side in `RemoteWidget.tsx`.
