@@ -5,10 +5,11 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
-// Single lint config for every workspace (apps/* and remotes/*). Previously this
-// lived under apps/host and so covered only the host.
+// Single lint config for every workspace (apps/*/fe and remotes/*/fe). Previously
+// this lived under apps/host and so covered only the host.
 export default defineConfig([
-  globalIgnores(['**/dist', '**/.wrangler', '**/worker-configuration.d.ts']),
+  // `be/` holds the .NET services — no JS/TS in there for ESLint to look at.
+  globalIgnores(['**/dist', '**/be/**']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -30,13 +31,6 @@ export default defineConfig([
     files: ['packages/ui/**/*.{ts,tsx}'],
     rules: {
       'react-refresh/only-export-components': 'off',
-    },
-  },
-  // The host's Worker runs on workerd, not in the browser.
-  {
-    files: ['apps/host/worker/**/*.ts'],
-    languageOptions: {
-      globals: {},
     },
   },
 ])

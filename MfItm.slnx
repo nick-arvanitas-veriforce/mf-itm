@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/apps/" />
+  <Folder Name="/apps/host/" />
+  <Folder Name="/apps/host/be/">
+    <Project Path="apps/host/be/MfItm.Host.Api.csproj" />
+  </Folder>
+  <Folder Name="/remotes/" />
+  <Folder Name="/remotes/dtd/" />
+  <Folder Name="/remotes/dtd/be/">
+    <Project Path="remotes/dtd/be/MfItm.Dtd.Api.csproj" />
+  </Folder>
+  <Folder Name="/remotes/em/" />
+  <Folder Name="/remotes/em/be/">
+    <Project Path="remotes/em/be/MfItm.Em.Api.csproj" />
+  </Folder>
+</Solution>

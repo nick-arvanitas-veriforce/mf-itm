@@ -20,12 +20,27 @@ dist-ssr
 *.sln
 *.sw?
 
-# wrangler files
-.wrangler
-.dev.vars*
-!.dev.vars.example
+# Local environment files. Render env vars are declared in render.yaml or set
+# in the dashboard; nothing with a real value belongs in the repo.
 .env*
 !.env.example
 
 # Module Federation diagnostics
 .mf
+
+# .NET build output (apps/*/be, remotes/*/be).
+# `obj/` is the restore + codegen directory (this project's node_modules/.vite
+# equivalent: the NuGet dependency graph, generated sources, build caches) and
+# `bin/` holds the compiled assemblies. Both are rebuilt from source by
+# `dotnet build` and must never be committed — obj/ in particular contains
+# absolute machine paths, so committing it breaks the build on every other machine.
+[Bb]in/
+[Oo]bj/
+
+# User-specific project settings, not shared config.
+*.user
+*.userosscache
+
+# The .slnx solution IS source — it lists the projects that make up the build.
+# The `*.sln` rule above targets the legacy format; keep the new one tracked.
+!*.slnx

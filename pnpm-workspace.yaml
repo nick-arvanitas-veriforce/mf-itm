@@ -1,13 +1,14 @@
+# Each app is split into `fe/` (this workspace) and `be/` (a .NET project pnpm
+# ignores), so the globs point at the frontend folder rather than the app root.
 packages:
-  - apps/*
-  - packages/*
-  - remotes/*
+  - apps/*/fe
+  - packages/ui
+  - remotes/*/fe
 
-# esbuild (Vite) and workerd (Wrangler) need their postinstall scripts to place
-# platform-native binaries. pnpm blocks build scripts by default.
+# esbuild (Vite) needs its postinstall script to place a platform-native binary.
+# pnpm blocks build scripts by default.
 onlyBuiltDependencies:
   - esbuild
-  - workerd
 
 # Single source of truth for dependency versions across every workspace.
 # Workspaces reference these as `"vite": "catalog:"` — so a version is declared
@@ -16,7 +17,6 @@ onlyBuiltDependencies:
 # into its own repo (swap `catalog:` for the literal version and it stands alone).
 catalog:
   "@alcumus/design-tokens": ^3.0.45
-  "@cloudflare/vite-plugin": ^1.40.2
   "@emotion/react": ^11.14.0
   "@emotion/styled": ^11.14.1
   "@eslint/js": ^10.0.1
@@ -43,4 +43,3 @@ catalog:
   typescript-eslint: ^8.59.2
   typescript: ~6.0.2
   vite: ^8.0.12
-  wrangler: ^4.100.0

@@ -1,0 +1,31 @@
+<!-- Settings shared by the three backend projects (apps/host/be, remotes/*/be).
+     At the repo root because MSBuild only discovers this file by walking UP from
+     each project — a copy per `be/` folder would drift.
+
+     This affects .NET builds only; the pnpm workspaces ignore it entirely. -->
+<Project>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Warnings are errors so a mistake fails Render's build step rather than
+         surfacing at runtime on the first request. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Each `be` folder is a project root; keep artifacts out of the source tree
+         so the FE tooling's file watchers never see them. -->
+    <BaseOutputPath>$(MSBuildProjectDirectory)/bin/</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MSBuildProjectDirectory)/obj/</BaseIntermediateOutputPath>
+  </PropertyGroup>
+
+  <!-- Cross-cutting service setup (CORS, health, Neon connection strings) is
+       LINKED into each project rather than referenced as a shared project or
+       NuGet package. The services deploy independently and Render builds each
+       one from its own rootDir, so a project reference reaching outside that
+       directory would not restore. -->
+  <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <Compile Include="$(MSBuildThisFileDirectory)packages/service-defaults/*.cs"
+             Link="ServiceDefaults/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

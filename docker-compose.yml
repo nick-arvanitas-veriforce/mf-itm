@@ -1,0 +1,43 @@
+# Local Postgres for development. Production runs on NEON — this exists so you can
+# work without network access and without sharing a database with anyone else.
+#
+#   pnpm db:up     start it
+#   pnpm db:down   stop it (data survives)
+#   pnpm db:reset  stop it and DELETE the data, so the next boot re-seeds
+#
+# Each service owns its own database, mirroring the deployed setup: three Neon
+# databases, one per service, so no service can read another's tables directly.
+
+services:
+  postgres:
+    # Pinned to the major version Neon runs, so local and deployed behave the same.
+    image: postgres:17-alpine
+    container_name: mf-itm-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      # The `postgres` database is created by the image; the three app databases
+      # come from the init script below.
+      POSTGRES_DB: postgres
+    ports:
+      # 55432 on the host, so this never collides with a Postgres you already run
+      # locally on the default 5432.
+      - "55432:5432"
+    volumes:
+      - mf-itm-pgdata:/var/lib/postgresql/data
+      # Scripts here run ONLY on first boot of an empty data directory. After that
+      # the volume persists and this is skipped — use `pnpm db:reset` to re-run it.
+      - ./scripts/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    healthcheck:
+      # `pnpm dev` waits on this before starting the backends: Postgres accepts TCP
+      # connections a moment before it is ready to serve queries, and a backend that
+      # connects too early dies during its startup migration.
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 3s
+
+volumes:
+  mf-itm-pgdata:

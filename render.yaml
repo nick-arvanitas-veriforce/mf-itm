@@ -1,24 +1,97 @@
-# Render Blueprint — three independent static sites (shell + two remote MFEs).
+# Render Blueprint — three micro-frontends and their three .NET backends.
 #
-# The host loads each remote CROSS-ORIGIN from its own Render URL, so:
-#   1. Remotes must send Access-Control-Allow-Origin (the `headers` blocks below).
-#   2. The host needs VITE_EM_URL / VITE_DTD_URL at BUILD time — Vite inlines
-#      them into the bundle, so they must be set before `vite build` runs.
+# Each app is a self-contained unit: `<app>/fe` (Vite static site) and
+# `<app>/be` (ASP.NET Core web service), deployed as two Render services.
 #
-# NOTE: Render ignores `_headers` files (that is Cloudflare Pages/Workers); header
-# and routing rules must be declared here or in the dashboard.
+#   apps/host    shell  — owns the user, permissions, and the nav the shell renders
+#   remotes/em   Employee Management — the worker roster
+#   remotes/dtd  Digital Training Delivery — the course catalog
 #
-# Deploy order does not matter for the remotes, but the host's build needs the
-# remote URLs to already be known. `fromService` resolves them automatically.
+# Two things the browser does cross-origin, both of which need explicit config:
+#   1. The host loads each remote's federated chunks from the remote's OWN origin,
+#      so remotes must send Access-Control-Allow-Origin (the `headers` blocks).
+#   2. The frontends call the APIs directly at their own onrender.com origins, so
+#      each backend must allow the calling origins (CORS_ALLOWED_ORIGINS).
+#
+# NOTE: header and routing rules for a static site must be declared here (or in
+# the dashboard). Render does not read a `_headers` file from the build output.
+#
+# The DATABASE ("mf-itm") lives on NEON, not Render, so it is not declared in this
+# file. Each backend reads DATABASE_URL — set it per service in the dashboard (or
+# in an env group) to the Neon connection string. See README "Database (Neon)".
+#
+# Deploy order does not matter for the remotes, but the host's FE build needs the
+# remote URLs to already be known.
 
 services:
-  # ---------------------------------------------------------------- remotes ---
+  # =========================================================== backends ===
+  # .NET services. `rootDir` is the REPO ROOT, not the `be/` folder: the build
+  # links shared source from packages/service-defaults and reads the root
+  # Directory.Build.props, both of which sit outside the project directory.
+
+  - type: web
+    runtime: docker
+    name: mf-itm-host-api
+    dockerfilePath: ./apps/host/be/Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      # Neon connection string. Marked sync:false so it is NOT stored in this
+      # file — set the value in the Render dashboard. Accepts either Neon's
+      # postgresql:// URI or Npgsql key/value form.
+      - key: DATABASE_URL
+        sync: false
+      # The FE origins allowed to call this API. The host FE calls it directly
+      # from the browser, so its origin must be listed here or every request is
+      # blocked by CORS. Update if you attach custom domains.
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://mf-itm-host.onrender.com,https://em-tv4i.onrender.com,https://mf-itm-m5xr.onrender.com
+
+  - type: web
+    runtime: docker
+    name: mf-itm-em-api
+    dockerfilePath: ./remotes/em/be/Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      # The EM remote's widget runs INSIDE the host page, so the browser's origin
+      # is the HOST's — that origin, not the remote's, is what CORS checks.
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://mf-itm-host.onrender.com,https://em-tv4i.onrender.com
+
+  - type: web
+    runtime: docker
+    name: mf-itm-dtd-api
+    dockerfilePath: ./remotes/dtd/be/Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://mf-itm-host.onrender.com,https://mf-itm-m5xr.onrender.com
+
+  # ========================================================== frontends ===
+  # ------------------------------------------------------------ remotes ---
   - type: web
     runtime: static
     name: mf-itm-em
-    rootDir: remotes/em
+    rootDir: remotes/em/fe
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
     staticPublishPath: ./dist
+    envVars:
+      # Vite inlines VITE_* at BUILD time, so the API origin must be present when
+      # `vite build` runs — setting it at runtime has no effect on a built bundle.
+      - key: VITE_EM_API_URL
+        value: https://mf-itm-em-api.onrender.com
     # Remote MFEs are an ASSET ORIGIN, not an app: a request for a missing chunk
     # must 404 so Module Federation reports it, instead of silently receiving
     # index.html and failing later with a JS parse error. Declaring no catch-all
@@ -40,9 +113,12 @@ services:
   - type: web
     runtime: static
     name: mf-itm-dtd
-    rootDir: remotes/dtd
+    rootDir: remotes/dtd/fe
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
     staticPublishPath: ./dist
+    envVars:
+      - key: VITE_DTD_API_URL
+        value: https://mf-itm-dtd-api.onrender.com
     headers:
       - path: /*
         name: Access-Control-Allow-Origin
@@ -54,11 +130,11 @@ services:
         name: Cache-Control
         value: no-cache
 
-  # ------------------------------------------------------------------- host ---
+  # --------------------------------------------------------------- host ---
   - type: web
     runtime: static
     name: mf-itm-host
-    rootDir: apps/host
+    rootDir: apps/host/fe
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
     staticPublishPath: ./dist
     envVars:
@@ -77,6 +153,9 @@ services:
         value: https://em-tv4i.onrender.com
       - key: VITE_DTD_URL
         value: https://mf-itm-m5xr.onrender.com
+      # The shell fetches its user + permissions + nav from here before first paint.
+      - key: VITE_HOST_API_URL
+        value: https://mf-itm-host-api.onrender.com
     routes:
       # The shell IS a SPA — unknown paths must serve index.html so client-side
       # routing works on a hard refresh.

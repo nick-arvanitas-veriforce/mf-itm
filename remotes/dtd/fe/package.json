@@ -1,0 +1,34 @@
+{
+  "name": "@mf-itm/dtd",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5175 --strictPort",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --port 5175 --strictPort",
+    "//deploy": "Deployed as a static site on Render (see /render.yaml). The build requires VITE_DTD_API_URL — Vite inlines it at build time."
+  },
+  "dependencies": {
+    "@mf-itm/ui": "workspace:*",
+    "@fortawesome/react-fontawesome": "catalog:",
+    "@fortawesome/free-solid-svg-icons": "catalog:",
+    "@fortawesome/free-regular-svg-icons": "catalog:",
+    "@fortawesome/fontawesome-svg-core": "catalog:",
+    "@alcumus/design-tokens": "catalog:",
+    "@emotion/react": "catalog:",
+    "@emotion/styled": "catalog:",
+    "@mui/material": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@module-federation/vite": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

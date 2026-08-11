@@ -1,0 +1,35 @@
+{
+  "name": "@mf-itm/host",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5173 --strictPort",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --port 5173 --strictPort",
+    "//deploy": "Deployed as a static site on Render (see /render.yaml). The host build requires VITE_EM_URL and VITE_DTD_URL — Vite inlines them at build time."
+  },
+  "dependencies": {
+    "@mf-itm/ui": "workspace:*",
+    "@alcumus/design-tokens": "catalog:",
+    "@fortawesome/react-fontawesome": "catalog:",
+    "@fortawesome/free-solid-svg-icons": "catalog:",
+    "@fortawesome/free-regular-svg-icons": "catalog:",
+    "@fortawesome/fontawesome-svg-core": "catalog:",
+    "@emotion/react": "catalog:",
+    "@emotion/styled": "catalog:",
+    "@module-federation/runtime": "catalog:",
+    "@mui/material": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@module-federation/vite": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}
