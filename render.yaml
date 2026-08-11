@@ -84,9 +84,13 @@ services:
   - type: web
     runtime: static
     name: mf-itm-em
-    rootDir: remotes/em/fe
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
-    staticPublishPath: ./dist
+    # No `rootDir`: the build runs from the REPO ROOT so pnpm can see
+    # pnpm-workspace.yaml and the lockfile, then `--filter` narrows the build to
+    # this one workspace. Installing from inside remotes/em/fe would not resolve
+    # the workspace root, so `workspace:*` deps (@mf-itm/ui) would not link.
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @mf-itm/em build
+    # Relative to the repo root, since there is no rootDir to resolve against.
+    staticPublishPath: remotes/em/fe/dist
     envVars:
       # Vite inlines VITE_* at BUILD time, so the API origin must be present when
       # `vite build` runs — setting it at runtime has no effect on a built bundle.
@@ -113,9 +117,9 @@ services:
   - type: web
     runtime: static
     name: mf-itm-dtd
-    rootDir: remotes/dtd/fe
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
-    staticPublishPath: ./dist
+    # Built from the repo root and filtered — see the em remote above.
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @mf-itm/dtd build
+    staticPublishPath: remotes/dtd/fe/dist
     envVars:
       - key: VITE_DTD_API_URL
         value: https://mf-itm-dtd-api.onrender.com
@@ -134,9 +138,9 @@ services:
   - type: web
     runtime: static
     name: mf-itm-host
-    rootDir: apps/host/fe
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
-    staticPublishPath: ./dist
+    # Built from the repo root and filtered — see the em remote above.
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @mf-itm/host build
+    staticPublishPath: apps/host/fe/dist
     envVars:
       # Build-time only, and must be the remotes' PUBLIC origins including the
       # scheme (the browser fetches these directly, cross-origin).
