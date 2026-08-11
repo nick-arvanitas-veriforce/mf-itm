@@ -16,17 +16,26 @@
 # NOTE: header and routing rules for a static site must be declared here (or in
 # the dashboard). Render does not read a `_headers` file from the build output.
 #
-# The DATABASE ("mf-itm") lives on NEON, not Render, so it is not declared in this
-# file. Each backend reads DATABASE_URL — set it per service in the dashboard (or
-# in an env group) to the Neon connection string. See README "Database (Neon)".
+# EVERY service builds from the REPO ROOT — no service sets `rootDir`. The .NET
+# builds need it (shared source + Directory.Build.props live above `be/`), and so
+# do the frontends: pnpm must see pnpm-workspace.yaml and the lockfile to link the
+# `workspace:*` dependency on @mf-itm/ui. Each frontend then narrows its build with
+# `pnpm --filter <pkg> build`, and `buildFilter` keeps an unrelated change from
+# rebuilding all six services.
+#
+# The DATABASE lives on NEON, not Render, so it is not declared in this file. Each
+# backend needs its OWN database (mfitm_host / mfitm_em / mfitm_dtd), so the three
+# DATABASE_URL values differ — set each per service in the dashboard, NOT via a
+# shared env group, which would point all three at one database. See README
+# "Database (Neon)".
 #
 # Deploy order does not matter for the remotes, but the host's FE build needs the
 # remote URLs to already be known.
 
 services:
   # =========================================================== backends ===
-  # .NET services. `rootDir` is the REPO ROOT, not the `be/` folder: the build
-  # links shared source from packages/service-defaults and reads the root
+  # .NET services. The Docker build context is the REPO ROOT, not the `be/` folder:
+  # the build links shared source from packages/service-defaults and reads the root
   # Directory.Build.props, both of which sit outside the project directory.
 
   - type: web
@@ -91,6 +100,14 @@ services:
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @mf-itm/em build
     # Relative to the repo root, since there is no rootDir to resolve against.
     staticPublishPath: remotes/em/fe/dist
+    # Without `rootDir`, Render sees every push as touching this service. Rebuild
+    # only when this remote, the shared UI package, or the workspace deps change.
+    buildFilter:
+      paths:
+        - remotes/em/fe/**
+        - packages/ui/**
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
     envVars:
       # Vite inlines VITE_* at BUILD time, so the API origin must be present when
       # `vite build` runs — setting it at runtime has no effect on a built bundle.
@@ -120,6 +137,12 @@ services:
     # Built from the repo root and filtered — see the em remote above.
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @mf-itm/dtd build
     staticPublishPath: remotes/dtd/fe/dist
+    buildFilter:
+      paths:
+        - remotes/dtd/fe/**
+        - packages/ui/**
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
     envVars:
       - key: VITE_DTD_API_URL
         value: https://mf-itm-dtd-api.onrender.com
@@ -141,6 +164,12 @@ services:
     # Built from the repo root and filtered — see the em remote above.
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @mf-itm/host build
     staticPublishPath: apps/host/fe/dist
+    buildFilter:
+      paths:
+        - apps/host/fe/**
+        - packages/ui/**
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
     envVars:
       # Build-time only, and must be the remotes' PUBLIC origins including the
       # scheme (the browser fetches these directly, cross-origin).
