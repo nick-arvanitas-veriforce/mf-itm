@@ -16,6 +16,7 @@
     "build:host": "pnpm --filter @cf-mfe/host build",
     "build:em": "pnpm --filter @cf-mfe/em build",
     "build:dtd": "pnpm --filter @cf-mfe/dtd build",
+    "clean:cache": "pnpm -r exec rm -rf node_modules/.vite",
     "preview": "concurrently -k -n em,dtd,host -c magenta,green,cyan \"pnpm:preview:em\" \"pnpm:preview:dtd\" \"pnpm:preview:host\"",
     "preview:host": "pnpm --filter @cf-mfe/host preview",
     "preview:em": "pnpm --filter @cf-mfe/em preview",
@@ -35,5 +36,8 @@
     "globals": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:"
+  },
+  "dependencies": {
+    "@mui/material": "^9.3.1"
   }
 }
