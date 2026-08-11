@@ -32,6 +32,23 @@
 # Deploy order does not matter for the remotes, but the host's FE build needs the
 # remote URLs to already be known.
 
+# Shared env group. Every FRONTEND build runs `pnpm install`, which must
+# authenticate to GitHub Packages for @alcumus/design-tokens — .npmrc reads the
+# token from ${NPM_TOKEN}. The value is the same for all three, so it lives here
+# rather than being repeated per service.
+#
+# `sync: false` means Render PROMPTS for the value and never stores it in this
+# file — set NPM_TOKEN once in the dashboard under this group. The name must match
+# the group you already created, or Render makes a second, empty one.
+#
+# NOTE: this is BUILD-time auth. If a frontend still 401s after linking, set
+# NPM_TOKEN directly on that service — a service-level var always applies.
+envVarGroups:
+  - name: VARS
+    envVars:
+      - key: NPM_TOKEN
+        sync: false
+
 services:
   # =========================================================== backends ===
   # .NET services. The Docker build context is the REPO ROOT, not the `be/` folder:
@@ -109,6 +126,8 @@ services:
         - pnpm-lock.yaml
         - pnpm-workspace.yaml
     envVars:
+      # NPM_TOKEN — GitHub Packages auth for the install step.
+      - fromGroup: VARS
       # Vite inlines VITE_* at BUILD time, so the API origin must be present when
       # `vite build` runs — setting it at runtime has no effect on a built bundle.
       - key: VITE_EM_API_URL
@@ -144,6 +163,8 @@ services:
         - pnpm-lock.yaml
         - pnpm-workspace.yaml
     envVars:
+      # NPM_TOKEN — GitHub Packages auth for the install step.
+      - fromGroup: VARS
       - key: VITE_DTD_API_URL
         value: https://mf-itm-dtd-api.onrender.com
     headers:
@@ -171,6 +192,8 @@ services:
         - pnpm-lock.yaml
         - pnpm-workspace.yaml
     envVars:
+      # NPM_TOKEN — GitHub Packages auth for the install step.
+      - fromGroup: VARS
       # Build-time only, and must be the remotes' PUBLIC origins including the
       # scheme (the browser fetches these directly, cross-origin).
       #
