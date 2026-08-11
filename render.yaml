@@ -32,22 +32,16 @@
 # Deploy order does not matter for the remotes, but the host's FE build needs the
 # remote URLs to already be known.
 
-# Shared env group. Every FRONTEND build runs `pnpm install`, which must
-# authenticate to GitHub Packages for @alcumus/design-tokens — .npmrc reads the
-# token from ${NPM_TOKEN}. The value is the same for all three, so it lives here
-# rather than being repeated per service.
+# Every FRONTEND build runs `pnpm install`, which must authenticate to GitHub
+# Packages for @alcumus/design-tokens — .npmrc reads the token from ${NPM_TOKEN}.
 #
-# `sync: false` means Render PROMPTS for the value and never stores it in this
-# file — set NPM_TOKEN once in the dashboard under this group. The name must match
-# the group you already created, or Render makes a second, empty one.
+# This is declared per service rather than via a shared env group. A group can
+# only be linked by services in the SAME project environment, and these services
+# are not in the environment that owns the group, so `fromGroup: VARS` fails to
+# sync. Repeating the key three times is the cost of keeping the blueprint
+# self-contained and independent of project/environment membership.
 #
-# NOTE: this is BUILD-time auth. If a frontend still 401s after linking, set
-# NPM_TOKEN directly on that service — a service-level var always applies.
-envVarGroups:
-  - name: VARS
-    envVars:
-      - key: NPM_TOKEN
-        sync: false
+# NOTE: this is BUILD-time auth, not runtime.
 
 services:
   # =========================================================== backends ===
@@ -126,8 +120,10 @@ services:
         - pnpm-lock.yaml
         - pnpm-workspace.yaml
     envVars:
-      # NPM_TOKEN — GitHub Packages auth for the install step.
-      - fromGroup: VARS
+      # GitHub Packages auth for the install step. `sync: false` keeps the value
+      # out of this file — set it on this service in the Render dashboard.
+      - key: NPM_TOKEN
+        sync: false
       # Vite inlines VITE_* at BUILD time, so the API origin must be present when
       # `vite build` runs — setting it at runtime has no effect on a built bundle.
       - key: VITE_EM_API_URL
@@ -163,8 +159,9 @@ services:
         - pnpm-lock.yaml
         - pnpm-workspace.yaml
     envVars:
-      # NPM_TOKEN — GitHub Packages auth for the install step.
-      - fromGroup: VARS
+      # GitHub Packages auth — see the em remote above.
+      - key: NPM_TOKEN
+        sync: false
       - key: VITE_DTD_API_URL
         value: https://mf-itm-dtd-api.onrender.com
     headers:
@@ -192,8 +189,9 @@ services:
         - pnpm-lock.yaml
         - pnpm-workspace.yaml
     envVars:
-      # NPM_TOKEN — GitHub Packages auth for the install step.
-      - fromGroup: VARS
+      # GitHub Packages auth — see the em remote above.
+      - key: NPM_TOKEN
+        sync: false
       # Build-time only, and must be the remotes' PUBLIC origins including the
       # scheme (the browser fetches these directly, cross-origin).
       #
