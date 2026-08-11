@@ -67,12 +67,16 @@ services:
       #
       # These are hardcoded rather than derived: Render's `fromService` does not
       # support static sites, and its host/hostport properties resolve to
-      # PRIVATE-network addresses, which a browser cannot reach. Update these if
-      # you attach custom domains to the remotes.
+      # PRIVATE-network addresses, which a browser cannot reach.
+      #
+      # These must be the remotes' ACTUAL .onrender.com hostnames, which include
+      # a random suffix and so do NOT match the `name:` fields above. Copy them
+      # from each remote service's page in the Render dashboard; update here if
+      # you later attach custom domains.
       - key: VITE_EM_URL
-        value: https://mf-itm-em.onrender.com
+        value: https://em-tv4i.onrender.com
       - key: VITE_DTD_URL
-        value: https://mf-itm-dtd.onrender.com
+        value: https://mf-itm-m5xr.onrender.com
     routes:
       # The shell IS a SPA — unknown paths must serve index.html so client-side
       # routing works on a hard refresh.
