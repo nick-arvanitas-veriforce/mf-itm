@@ -7,10 +7,7 @@
     "dev": "vite --port 5173 --strictPort",
     "build": "tsc -b && vite build",
     "preview": "vite preview --port 5173 --strictPort",
-    "//deploy:env": "Host uses @cloudflare/vite-plugin, which selects the wrangler env at BUILD time via CLOUDFLARE_ENV (it strips env blocks from its generated config), so `wrangler deploy --env` does NOT work here. VITE_APP_VERSION sets the wrangler --tag AND is baked into the build (import.meta.env.VITE_APP_VERSION).",
-    "deploy:qa": "CLOUDFLARE_ENV=qa pnpm build && wrangler deploy --tag \"${VITE_APP_VERSION:?set VITE_APP_VERSION (e.g. VITE_APP_VERSION=v1.2.3)}\"",
-    "deploy:prod": "CLOUDFLARE_ENV=prod pnpm build && wrangler deploy --tag \"${VITE_APP_VERSION:?set VITE_APP_VERSION (e.g. VITE_APP_VERSION=v1.2.3)}\"",
-    "cf-typegen": "wrangler types"
+    "//deploy": "Deployed as a static site on Render (see /render.yaml). The host build requires VITE_EM_URL and VITE_DTD_URL — Vite inlines them at build time."
   },
   "dependencies": {
     "@cf-mfe/ui": "workspace:*",

@@ -1,0 +1,85 @@
+# Render Blueprint — three independent static sites (shell + two remote MFEs).
+#
+# The host loads each remote CROSS-ORIGIN from its own Render URL, so:
+#   1. Remotes must send Access-Control-Allow-Origin (the `headers` blocks below).
+#   2. The host needs VITE_EM_URL / VITE_DTD_URL at BUILD time — Vite inlines
+#      them into the bundle, so they must be set before `vite build` runs.
+#
+# NOTE: Render ignores `_headers` files (that is Cloudflare Pages/Workers); header
+# and routing rules must be declared here or in the dashboard.
+#
+# Deploy order does not matter for the remotes, but the host's build needs the
+# remote URLs to already be known. `fromService` resolves them automatically.
+
+services:
+  # ---------------------------------------------------------------- remotes ---
+  - type: web
+    runtime: static
+    name: mf-itm-em
+    rootDir: remotes/em
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    staticPublishPath: ./dist
+    # Remote MFEs are an ASSET ORIGIN, not an app: a request for a missing chunk
+    # must 404 so Module Federation reports it, instead of silently receiving
+    # index.html and failing later with a JS parse error. Declaring no catch-all
+    # rewrite keeps Render's default 404 behaviour.
+    headers:
+      # remoteEntry.js + every federated chunk is fetched by the host's origin.
+      - path: /*
+        name: Access-Control-Allow-Origin
+        value: "*"
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      # Stable filename whose contents change each deploy — must revalidate,
+      # otherwise browsers pin an old container that points at dead chunks.
+      - path: /remoteEntry.js
+        name: Cache-Control
+        value: no-cache
+
+  - type: web
+    runtime: static
+    name: mf-itm-dtd
+    rootDir: remotes/dtd
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    staticPublishPath: ./dist
+    headers:
+      - path: /*
+        name: Access-Control-Allow-Origin
+        value: "*"
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /remoteEntry.js
+        name: Cache-Control
+        value: no-cache
+
+  # ------------------------------------------------------------------- host ---
+  - type: web
+    runtime: static
+    name: mf-itm-host
+    rootDir: apps/host
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    staticPublishPath: ./dist
+    envVars:
+      # Build-time only, and must be the remotes' PUBLIC origins including the
+      # scheme (the browser fetches these directly, cross-origin).
+      #
+      # These are hardcoded rather than derived: Render's `fromService` does not
+      # support static sites, and its host/hostport properties resolve to
+      # PRIVATE-network addresses, which a browser cannot reach. Update these if
+      # you attach custom domains to the remotes.
+      - key: VITE_EM_URL
+        value: https://mf-itm-em.onrender.com
+      - key: VITE_DTD_URL
+        value: https://mf-itm-dtd.onrender.com
+    routes:
+      # The shell IS a SPA — unknown paths must serve index.html so client-side
+      # routing works on a hard refresh.
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
